@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import random
-from typing import Generic, Iterable, List, Optional, TypeVar
+from typing import Generic, Iterable, Iterator, Optional, TypeVar
 
 T = TypeVar("T")
 
@@ -53,7 +53,7 @@ class RandomizedHeap(Generic[T]):
     structure.
     Wiki: https://en.wikipedia.org/wiki/Randomized_meldable_heap
 
-    >>> RandomizedHeap([2, 3, 1, 5, 1, 7]).to_sorted_list()
+    >>> list(RandomizedHeap([2, 3, 1, 5, 1, 7]))
     [1, 1, 2, 3, 5, 7]
 
     >>> rh = RandomizedHeap()
@@ -65,19 +65,53 @@ class RandomizedHeap(Generic[T]):
     >>> rh.insert(1)
     >>> rh.insert(-1)
     >>> rh.insert(0)
-    >>> rh.to_sorted_list()
+    >>> list(rh)
     [-1, 0, 1]
     """
 
     def __init__(self, data: Optional[Iterable[T]] = ()) -> None:
         """
         >>> rh = RandomizedHeap([3, 1, 3, 7])
-        >>> rh.to_sorted_list()
+        >>> list(rh)
         [1, 3, 3, 7]
         """
         self._root: Optional[RandomizedHeapNode[T]] = None
         for item in data:
             self.insert(item)
+
+    def __bool__(self) -> bool:
+        """
+        Check if the heap is not empty.
+
+        >>> rh = RandomizedHeap()
+        >>> bool(rh)
+        False
+        >>> rh.insert(1)
+        >>> bool(rh)
+        True
+        >>> rh.clear()
+        >>> bool(rh)
+        False
+        """
+        return self._root is not None
+
+    def __iter__(self) -> Iterator[T]:
+        """
+        Returns sorted list containing all the values in the heap.
+
+        >>> sh = RandomizedHeap([3, 1, 3, 7])
+        >>> list(sh)
+        [1, 3, 3, 7]
+        """
+        result = []
+        while self:
+            result.append(self.pop())
+
+        # Pushing items back to the heap not to clear it.
+        for item in result:
+            self.insert(item)
+
+        return iter(result)
 
     def insert(self, value: T) -> None:
         """
@@ -88,7 +122,7 @@ class RandomizedHeap(Generic[T]):
         >>> rh.insert(1)
         >>> rh.insert(3)
         >>> rh.insert(7)
-        >>> rh.to_sorted_list()
+        >>> list(rh)
         [1, 3, 3, 7]
         """
         self._root = RandomizedHeapNode.merge(self._root, RandomizedHeapNode(value))
@@ -150,36 +184,6 @@ class RandomizedHeap(Generic[T]):
         IndexError: Can't get top element for the empty heap.
         """
         self._root = None
-
-    def to_sorted_list(self) -> List[T]:
-        """
-        Returns sorted list containing all the values in the heap.
-
-        >>> rh = RandomizedHeap([3, 1, 3, 7])
-        >>> rh.to_sorted_list()
-        [1, 3, 3, 7]
-        """
-        result = []
-        while self:
-            result.append(self.pop())
-
-        return result
-
-    def __bool__(self) -> bool:
-        """
-        Check if the heap is not empty.
-
-        >>> rh = RandomizedHeap()
-        >>> bool(rh)
-        False
-        >>> rh.insert(1)
-        >>> bool(rh)
-        True
-        >>> rh.clear()
-        >>> bool(rh)
-        False
-        """
-        return self._root is not None
 
 
 if __name__ == "__main__":
